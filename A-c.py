@@ -124,7 +124,7 @@ if __name__ == "__main__":
     datas, data_labels = process_data(dataDf)
     average_errors = []
     for index in range(len(datas)):
-        rfc = RandomForestClassifier(max_depth=2, random_state=0)
+        rfc = RandomForestClassifier()
         average_error = train(rfc, datas[index], data_labels[index])
         print(average_error)
         average_errors.append(average_error)

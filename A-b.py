@@ -261,7 +261,7 @@ if __name__ == "__main__":
     neigh = KNeighborsClassifier(n_neighbors=3)
     dtc = DecisionTreeClassifier(random_state=0)
     abc = AdaBoostClassifier(n_estimators=50, learning_rate=1.0)
-    rfc = RandomForestClassifier(max_depth=2, random_state=0)
+    rfc = RandomForestClassifier()
     bc = BaggingClassifier()
     gbc = GradientBoostingClassifier()
     # classifiers = [gnb, neigh, dtc, abc, rfc, bc, gbc]

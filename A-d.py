@@ -150,7 +150,7 @@ if __name__ == "__main__":
     average_errors = []
     group_medians = {}
     for index in range(len(datas)):
-        rfc = RandomForestClassifier(max_depth=2, random_state=0)
+        rfc = RandomForestClassifier()
         average_error = train(rfc, datas[index], data_labels[index])
         median = np.median(average_error)
         group_medians[index] = median

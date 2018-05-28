@@ -1,5 +1,6 @@
 import pandas as pd
 import numpy as np
+from sklearn.naive_bayes import GaussianNB
 
 
 def get_month_data(vip_df, month):
@@ -18,9 +19,17 @@ def get_all_month_data(vipDf):
     return df[months[0]: months[2]].reset_index()
 
 
-def get_count_by_month(df):
+def is_exist(df):
+    try:
+        data = len(get_month_data(df, months[3]))
+    except:
+        data = 0
+    return data > 0
+
+
+def get_count_by_month(df, months):
     values = []
-    for i in range(3):
+    for i in range(len(months) - 1):
         try:
             values.append(get_month_buy_count(df, months[i]))
         except:
@@ -28,9 +37,9 @@ def get_count_by_month(df):
     return values
 
 
-def get_amt_by_month(df):
+def get_amt_by_month(df, months):
     values = []
-    for i in range(3):
+    for i in range(len(months) - 1):
         try:
             values.append(get_month_data(df, months[i])['amt'].sum())
         except:
@@ -38,9 +47,9 @@ def get_amt_by_month(df):
     return values
 
 
-def get_day_by_month(df):
+def get_day_by_month(df, months):
     values = []
-    for i in range(3):
+    for i in range(len(months) - 1):
         try:
             df1 = get_month_data(df, months[i]).set_index('sldat')
             values.append(len(df1.resample('D').mean()))
@@ -49,9 +58,9 @@ def get_day_by_month(df):
     return values
 
 
-def get_column_by_month(df, col):
+def get_column_by_month(df, col, months):
     values = []
-    for i in range(3):
+    for i in range(len(months) - 1):
         try:
             values.append(get_month_data(df, months[i])[col].drop_duplicates().count())
         except:
@@ -59,9 +68,44 @@ def get_column_by_month(df, col):
     return values
 
 
+def get_feature(itemDf, months):
+    buyCount = get_count_by_month(itemDf, months)
+    amtCount = get_amt_by_month(itemDf, months)
+    dayCount = get_day_by_month(itemDf, months)
+    feature = buyCount + amtCount + dayCount + [sum(buyCount), sum(amtCount), sum(dayCount)]
+    return feature
+
+
+def get_features(tradeDf, statistic, months):
+    features = []
+    infos = []
+    items = tradeDf.groupby(statistic)
+    itemNos = list(items.indices.keys())
+    for index in range(1, len(itemNos)):
+        itemDf = items.get_group(itemNos[index])
+        infos.append(itemNos[index])
+        feature = get_feature(itemDf, months)
+        features.append(feature)
+    return infos, np.array(features)
+
+
+def train(tradeDf, statistic, months):
+    features = []
+    labels = []
+    infos = []
+    items = tradeDf.groupby(statistic)
+    itemNos = list(items.indices.keys())
+    for index in range(1, len(itemNos)):
+        itemDf = items.get_group(itemNos[index])
+        feature = get_feature(itemDf, months)
+        features.append(feature)
+        infos.append(itemNos[index])
+        labels.append(is_exist(itemDf))
+    return infos, np.array(features), np.array(labels)
+
+
 if __name__ == "__main__":
-    tradeDf = pd.read_csv('trade_new.csv', header=0)
-    months = ['2016-2', '2016-3', '2016-4', '2016-5']
+    tradeDf = pd.read_csv('trade_new.csv', header=0, dtype={'vipno': np.object, 'pluno': np.object})
     # data pre process
     tradeDf['sldat'] = pd.to_datetime(tradeDf['sldat'])
     tradeDf['bndno'] = tradeDf['bndno'].fillna(-1).astype(int)
@@ -69,22 +113,16 @@ if __name__ == "__main__":
     # step 1
     # statistics = ['vipno', 'bndno', 'dptno', 'pluno', ['vipno', 'bndno'],
     #               ['vipno', 'dptno'], ['vipno', 'pluno'], ['bndno', 'dptno']]
-    statistics = [['vipno', 'pluno']]
-    for item in statistics:
-        items = tradeDf.groupby(item)
-        itemNos = list(items.indices.keys())
-        for index in range(1, len(itemNos)):
-            itemDf = items.get_group(itemNos[index])
-            buyCount = get_count_by_month(itemDf)
-            amtCount = get_amt_by_month(itemDf)
-            dayCount = get_day_by_month(itemDf)
-            print(buyCount)
-            print(amtCount)
-            print(dayCount)
-            print(sum(buyCount))
-            print(sum(amtCount))
-            print(sum(dayCount))
-            break
+    statistic = ['vipno', 'pluno']
+    months = ['2016-2', '2016-3', '2016-4', '2016-5']
+    infos, features, labels = train(tradeDf, statistic, months)
+    gnb = GaussianNB()
+    gnb.fit(features, labels)
+    months = ['2016-5', '2016-6', '2016-7', '2016-8']
+    test_features = get_features(tradeDf, statistic, months)
+    y_pred = gnb.predict(test_features)
+    for index in range(len(test_features)):
+        print(infos[index][0], infos[index][1], y_pred[index], sep=',')
 
     # step 2
     statistics = ['vipno']
