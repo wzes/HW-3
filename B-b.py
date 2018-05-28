@@ -8,7 +8,7 @@ def get_month_data(vip_df, month):
     return df[month].reset_index()
 
 
-def get_month_buy_count(vip_df, month):
+def get_buy_count_by_month(vip_df, month):
     data = vip_df.set_index('sldat')
     df = data[month].reset_index()
     return len(df.groupby('sldat').indices.keys())
@@ -31,7 +31,7 @@ def get_count_by_month(df, months):
     values = []
     for i in range(len(months) - 1):
         try:
-            values.append(get_month_buy_count(df, months[i]))
+            values.append(get_buy_count_by_month(df, months[i]))
         except:
             values.append(0)
     return values
@@ -104,7 +104,15 @@ def train(tradeDf, statistic, months):
     return infos, np.array(features), np.array(labels)
 
 
+def write_predict(features, infos, my_number, work_number):
+    for index in range(len(features)):
+        with open('output/' + my_number + '_' + work_number + '_GaussianNB.txt', 'a+') as f:
+            f.write(infos[index][0] + ',' + infos[index][1] + ',' + y_pred[index] + '\n')
+
+
 if __name__ == "__main__":
+    my_number = '1552730'
+    work_number = '2b'
     tradeDf = pd.read_csv('trade_new.csv', header=0, dtype={'vipno': np.object, 'pluno': np.object})
     # data pre process
     tradeDf['sldat'] = pd.to_datetime(tradeDf['sldat'])
@@ -121,8 +129,9 @@ if __name__ == "__main__":
     months = ['2016-5', '2016-6', '2016-7', '2016-8']
     test_features = get_features(tradeDf, statistic, months)
     y_pred = gnb.predict(test_features)
-    for index in range(len(test_features)):
-        print(infos[index][0], infos[index][1], y_pred[index], sep=',')
+
+    # write
+    write_predict(test_features)
 
     # step 2
     statistics = ['vipno']
