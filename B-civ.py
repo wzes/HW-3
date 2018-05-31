@@ -108,29 +108,30 @@ def train(tradeDf, statistic, months):
         feature = get_feature(itemDf, months)
         features.append(feature)
         infos.append(itemNos[index])
-        labels.append(is_exist(itemDf))
+        labels.append(feature[1])
     return infos, np.array(features), np.array(labels)
 
 
 def write_predict(features, infos, y_pred, my_number, work_number, classifier_name):
     for index in range(len(features)):
         with open('output/' + my_number + '_' + work_number + '_' + classifier_name + '.txt', 'a+') as f:
-            f.write(infos[index][0] + ',' + y_pred[index] + '\n')
+            f.write(infos[index][0] + ',' + infos[index][1] + ',' + y_pred[index] + '\n')
 
 
 if __name__ == "__main__":
     my_number = '1552730'
-    work_number = '2ci'
+    work_number = '2cii'
     tradeDf = pd.read_csv('trade_new.csv', header=0, dtype={'vipno': np.object, 'pluno': np.object})
     # data pre process
     tradeDf['sldat'] = pd.to_datetime(tradeDf['sldat'])
     tradeDf['bndno'] = tradeDf['bndno'].fillna(-1).astype(int)
 
     # step 1
+    # statistics = ['vipno', 'bndno', 'dptno', 'pluno', ['vipno', 'bndno'],
+    #               ['vipno', 'dptno'], ['vipno', 'pluno'], ['bndno', 'dptno']]
     statistic = ['vipno']
     months = ['2016-2', '2016-3', '2016-4', '2016-5']
     infos, features, labels = train(tradeDf, statistic, months)
-
     gnb = GaussianNB()
     neigh = KNeighborsClassifier(n_neighbors=3)
     dtc = DecisionTreeClassifier(random_state=0)

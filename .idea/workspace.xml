@@ -2,10 +2,9 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="d15eedae-ee34-4926-bbd9-9145257985a4" name="Default" comment="">
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/B-ciii.py" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/B-civ.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/B-b.py" afterPath="$PROJECT_DIR$/B-b.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/B-cii.py" afterPath="$PROJECT_DIR$/B-cii.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/B-ci.py" afterPath="$PROJECT_DIR$/B-ci.py" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
@@ -59,18 +58,6 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="A-e.py" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/A-e.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="3657">
-              <caret line="167" column="37" lean-forward="false" selection-start-line="167" selection-start-column="37" selection-end-line="167" selection-end-column="37" />
-              <folding>
-                <element signature="e#0#19#0" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
       <file leaf-file-name="B-a.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/B-a.py">
           <provider selected="true" editor-type-id="text-editor">
@@ -107,11 +94,21 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="B-ciii.py" pinned="false" current-in-tab="true">
+      <file leaf-file-name="B-ciii.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/B-ciii.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="299">
+            <state relative-caret-position="-115">
               <caret line="130" column="36" lean-forward="true" selection-start-line="130" selection-start-column="36" selection-end-line="130" selection-end-column="36" />
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="B-civ.py" pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/B-civ.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="437">
+              <caret line="110" column="12" lean-forward="false" selection-start-line="110" selection-start-column="12" selection-end-line="110" selection-end-column="12" />
               <folding />
             </state>
           </provider>
@@ -120,8 +117,8 @@
       <file leaf-file-name="B-ci.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/B-ci.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="69">
-              <caret line="131" column="33" lean-forward="true" selection-start-line="131" selection-start-column="33" selection-end-line="131" selection-end-column="33" />
+            <state relative-caret-position="253">
+              <caret line="117" column="37" lean-forward="false" selection-start-line="117" selection-start-column="37" selection-end-line="117" selection-end-column="37" />
               <folding />
             </state>
           </provider>
@@ -175,10 +172,11 @@
         <option value="$PROJECT_DIR$/A-a.py" />
         <option value="$PROJECT_DIR$/A-d.py" />
         <option value="$PROJECT_DIR$/A-e.py" />
-        <option value="$PROJECT_DIR$/B-ci.py" />
         <option value="$PROJECT_DIR$/B-b.py" />
         <option value="$PROJECT_DIR$/B-cii.py" />
         <option value="$PROJECT_DIR$/B-ciii.py" />
+        <option value="$PROJECT_DIR$/B-ci.py" />
+        <option value="$PROJECT_DIR$/B-civ.py" />
       </list>
     </option>
   </component>
@@ -412,13 +410,6 @@
     <watches-manager />
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/2g_gongcan.csv">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="0">
-          <caret line="0" column="21" lean-forward="false" selection-start-line="0" selection-start-column="13" selection-end-line="0" selection-end-column="21" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/data_2g.csv">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="0">
@@ -792,14 +783,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/B-ci.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="69">
-          <caret line="131" column="33" lean-forward="true" selection-start-line="131" selection-start-column="33" selection-end-line="131" selection-end-column="33" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/B-cii.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="391">
@@ -810,10 +793,26 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/B-ci.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="253">
+          <caret line="117" column="37" lean-forward="false" selection-start-line="117" selection-start-column="37" selection-end-line="117" selection-end-column="37" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/B-ciii.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="299">
+        <state relative-caret-position="-115">
           <caret line="130" column="36" lean-forward="true" selection-start-line="130" selection-start-column="36" selection-end-line="130" selection-end-column="36" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/B-civ.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="437">
+          <caret line="110" column="12" lean-forward="false" selection-start-line="110" selection-start-column="12" selection-end-line="110" selection-end-column="12" />
           <folding />
         </state>
       </provider>
