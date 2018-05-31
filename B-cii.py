@@ -120,17 +120,18 @@ def write_predict(features, infos, y_pred, my_number, work_number, classifier_na
 
 if __name__ == "__main__":
     my_number = '1552730'
-    work_number = '2ci'
+    work_number = '2cii'
     tradeDf = pd.read_csv('trade_new.csv', header=0, dtype={'vipno': np.object, 'pluno': np.object})
     # data pre process
     tradeDf['sldat'] = pd.to_datetime(tradeDf['sldat'])
     tradeDf['bndno'] = tradeDf['bndno'].fillna(-1).astype(int)
 
     # step 1
-    statistic = ['vipno']
+    # statistics = ['vipno', 'bndno', 'dptno', 'pluno', ['vipno', 'bndno'],
+    #               ['vipno', 'dptno'], ['vipno', 'pluno'], ['bndno', 'dptno']]
+    statistic = ['vipno', 'pluno']
     months = ['2016-2', '2016-3', '2016-4', '2016-5']
     infos, features, labels = train(tradeDf, statistic, months)
-
     gnb = GaussianNB()
     neigh = KNeighborsClassifier(n_neighbors=3)
     dtc = DecisionTreeClassifier(random_state=0)
