@@ -120,7 +120,7 @@ def write_predict(features, infos, y_pred, my_number, work_number, classifier_na
 
 if __name__ == "__main__":
     my_number = '1552730'
-    work_number = '2b'
+    work_number = '2cii'
     tradeDf = pd.read_csv('trade_new.csv', header=0, dtype={'vipno': np.object, 'pluno': np.object})
     # data pre process
     tradeDf['sldat'] = pd.to_datetime(tradeDf['sldat'])
@@ -129,7 +129,7 @@ if __name__ == "__main__":
     # step 1
     # statistics = ['vipno', 'bndno', 'dptno', 'pluno', ['vipno', 'bndno'],
     #               ['vipno', 'dptno'], ['vipno', 'pluno'], ['bndno', 'dptno']]
-    statistic = ['vipno', 'pluno']
+    statistic = ['vipno', 'dptno']
     months = ['2016-2', '2016-3', '2016-4', '2016-5']
     infos, features, labels = train(tradeDf, statistic, months)
     gnb = GaussianNB()

@@ -129,7 +129,7 @@ if __name__ == "__main__":
     # step 1
     # statistics = ['vipno', 'bndno', 'dptno', 'pluno', ['vipno', 'bndno'],
     #               ['vipno', 'dptno'], ['vipno', 'pluno'], ['bndno', 'dptno']]
-    statistic = ['vipno', 'pluno']
+    statistic = ['vipno', 'bndno']
     months = ['2016-2', '2016-3', '2016-4', '2016-5']
     infos, features, labels = train(tradeDf, statistic, months)
     gnb = GaussianNB()
