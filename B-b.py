@@ -27,14 +27,6 @@ def get_all_month_data(vipDf):
     return df[months[0]: months[2]].reset_index()
 
 
-def is_exist(df):
-    try:
-        data = len(get_month_data(df, months[3]))
-    except:
-        data = 0
-    return data > 0
-
-
 def get_count_by_month(df, months):
     values = []
     for i in range(len(months) - 1):
@@ -68,7 +60,7 @@ def get_day_by_month(df, months):
 
 def get_column_by_month(df, col, months):
     values = []
-    for i in range(len(months) - 1):
+    for i in range(3):
         try:
             values.append(get_month_data(df, months[i])[col].drop_duplicates().count())
         except:
@@ -76,40 +68,95 @@ def get_column_by_month(df, col, months):
     return values
 
 
-def get_feature(itemDf, months):
-    buyCount = get_count_by_month(itemDf, months)
-    amtCount = get_amt_by_month(itemDf, months)
-    dayCount = get_day_by_month(itemDf, months)
-    feature = buyCount + amtCount + dayCount + [sum(buyCount), sum(amtCount), sum(dayCount)]
-    return feature
+def get_last_month_record(statistic, months):
+    last_month_ui = {}
+    items = tradeDf.set_index('sldat')[months[3]]
+    for index, row in items.iterrows():
+        key = tuple([row[statistic[0]], row[statistic[1]]])
+        last_month_ui[key] = True
+    return last_month_ui
 
 
-def get_features(tradeDf, statistic, months):
-    features = []
-    infos = []
-    items = tradeDf.groupby(statistic)
-    itemNos = list(items.indices.keys())
-    for index in range(1, len(itemNos)):
-        itemDf = items.get_group(itemNos[index])
-        infos.append(itemNos[index])
-        feature = get_feature(itemDf, months)
-        features.append(feature)
-    return infos, np.array(features)
+def get_type_1_1_feature(months):
+    statistics = ['vipno', 'bndno', 'dptno', 'pluno', ['vipno', 'bndno'],
+                  ['vipno', 'dptno'], ['vipno', 'pluno'], ['bndno', 'dptno']]
+    features_type_1_1 = []
+    for item in statistics:
+        items = tradeDf.groupby(item)
+        itemNos = list(items.indices.keys())
+        type_1_1 = {}
+        for index in range(1, len(itemNos)):
+            itemDf = items.get_group(itemNos[index])
+            buyCount = get_count_by_month(itemDf, months)
+            amtCount = get_amt_by_month(itemDf, months)
+            dayCount = get_day_by_month(itemDf, months)
+            feature = buyCount + amtCount + dayCount + [sum(buyCount), sum(amtCount), sum(dayCount)]
+            type_1_1[itemNos[index]] = feature
+        features_type_1_1.append(type_1_1)
+    return features_type_1_1
 
 
-def train(tradeDf, statistic, months):
+def get_type_1_21_feature(months):
+    statistics = ['vipno']
+    columns = ['pluno', 'bndno', 'dptno']
+    features_type_1_21 = {}
+    for item in statistics:
+        items = tradeDf.groupby(item)
+        itemNos = list(items.indices.keys())
+        for index in range(0, len(itemNos)):
+            itemDf = items.get_group(itemNos[index])
+            i_count = get_column_by_month(itemDf, columns[0], months)
+            b_count = get_column_by_month(itemDf, columns[1], months)
+            c_count = get_column_by_month(itemDf, columns[2], months)
+            feature = i_count + b_count + c_count + [sum(i_count), sum(b_count), sum(c_count)]
+            key = itemNos[index]
+            features_type_1_21[key] = feature
+    return features_type_1_21
+
+
+def get_type_1_22_feature(months):
+    statistics = ['bndno', 'dptno']
+    columns = ['pluno']
+    features_type_1_22 = {}
+    for item in statistics:
+        items = tradeDf.groupby(item)
+        itemNos = list(items.indices.keys())
+        for index in range(0, len(itemNos)):
+            itemDf = items.get_group(itemNos[index])
+            i_count = get_column_by_month(itemDf, columns[0], months)
+            feature = i_count + [sum(i_count)]
+            key = itemNos[index]
+            features_type_1_22[key] = feature
+    return features_type_1_22
+
+
+def get_train_data(type_1_1_feature, index):
     features = []
     labels = []
     infos = []
-    items = tradeDf.groupby(statistic)
-    itemNos = list(items.indices.keys())
-    for index in range(1, len(itemNos)):
-        itemDf = items.get_group(itemNos[index])
-        feature = get_feature(itemDf, months)
-        features.append(feature)
-        infos.append(itemNos[index])
-        labels.append(is_exist(itemDf))
+    items = type_1_1_feature
+    # get group by ui data
+    ui = items[index]
+    for key in ui.keys():
+        features.append(ui[key])
+        infos.append(key)
+        try:
+            labels.append(last_month_ui[key])
+        except:
+            labels.append(False)
     return infos, np.array(features), np.array(labels)
+
+
+def get_test_data(type_1_1_feature, index):
+    features = []
+    infos = []
+    items = type_1_1_feature
+    # get group by ui data
+    ui = items[index]
+    for key in ui.keys():
+        features.append(ui[key])
+        infos.append(key)
+    return infos, np.array(features)
 
 
 def write_predict(features, infos, y_pred, my_number, work_number, classifier_name):
@@ -127,11 +174,16 @@ if __name__ == "__main__":
     tradeDf['bndno'] = tradeDf['bndno'].fillna(-1).astype(int)
 
     # step 1
-    # statistics = ['vipno', 'bndno', 'dptno', 'pluno', ['vipno', 'bndno'],
-    #               ['vipno', 'dptno'], ['vipno', 'pluno'], ['bndno', 'dptno']]
-    statistic = ['vipno', 'pluno']
     months = ['2016-2', '2016-3', '2016-4', '2016-5']
-    infos, features, labels = train(tradeDf, statistic, months)
+    last_month_ui = get_last_month_record(['vipno', 'pluno'], months)
+    type_1_1_feature = get_type_1_1_feature(months)
+    infos, features, labels = get_train_data(type_1_1_feature, 6)
+    #
+    test_months = ['2016-4', '2016-5', '2016-6', '2016-7']
+    test_last_month_ui = get_last_month_record(['vipno', 'pluno'], test_months)
+    test_features = get_type_1_1_feature(test_months)
+    test_infos, test_features, test_labels = get_train_data(test_features, 6)
+    #
     gnb = GaussianNB()
     neigh = KNeighborsClassifier(n_neighbors=3)
     dtc = DecisionTreeClassifier(random_state=0)
@@ -139,13 +191,13 @@ if __name__ == "__main__":
     rfc = RandomForestClassifier()
     bc = BaggingClassifier()
     gbc = GradientBoostingClassifier()
-    classifiers = [gnb, neigh, dtc, abc, rfc, bc, gbc]
+    classifiers = [gnb, neigh, dtc, abc, rfc, bc]
+
+    # classifiers = [gnb, neigh, dtc, abc, rfc, bc, gbc]
     for classifier in classifiers:
         start = time.time()
         classifier_name = classifier.__class__.__name__
         classifier.fit(features, labels)
-        months = ['2016-5', '2016-6', '2016-7', '2016-8']
-        test_features = get_features(tradeDf, statistic, months)
         y_pred = gnb.predict(test_features)
         end = time.time()
         print(end - start, 's')

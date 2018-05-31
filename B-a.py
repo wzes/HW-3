@@ -7,7 +7,7 @@ def get_month_data(vip_df, month):
     return df[month].reset_index()
 
 
-def get_month_buy_count(vip_df, month):
+def get_buy_count_by_month(vip_df, month):
     data = vip_df.set_index('sldat')
     df = data[month].reset_index()
     return len(df.groupby('sldat').indices.keys())
@@ -18,19 +18,27 @@ def get_all_month_data(vipDf):
     return df[months[0]: months[2]].reset_index()
 
 
-def get_count_by_month(df):
+def is_exist(df):
+    try:
+        data = len(get_month_data(df, months[3]))
+    except:
+        data = 0
+    return data > 0
+
+
+def get_count_by_month(df, months):
     values = []
-    for i in range(3):
+    for i in range(len(months) - 1):
         try:
-            values.append(get_month_buy_count(df, months[i]))
+            values.append(get_buy_count_by_month(df, months[i]))
         except:
             values.append(0)
     return values
 
 
-def get_amt_by_month(df):
+def get_amt_by_month(df, months):
     values = []
-    for i in range(3):
+    for i in range(len(months) - 1):
         try:
             values.append(get_month_data(df, months[i])['amt'].sum())
         except:
@@ -38,9 +46,9 @@ def get_amt_by_month(df):
     return values
 
 
-def get_day_by_month(df):
+def get_day_by_month(df, months):
     values = []
-    for i in range(3):
+    for i in range(len(months) - 1):
         try:
             df1 = get_month_data(df, months[i]).set_index('sldat')
             values.append(len(df1.resample('D').mean()))
@@ -49,7 +57,7 @@ def get_day_by_month(df):
     return values
 
 
-def get_column_by_month(df, col):
+def get_column_by_month(df, col, months):
     values = []
     for i in range(3):
         try:
@@ -57,6 +65,59 @@ def get_column_by_month(df, col):
         except:
             values.append(0)
     return values
+
+
+def get_type_1_1_feature(months):
+    statistics = ['vipno', 'bndno', 'dptno', 'pluno', ['vipno', 'bndno'],
+                  ['vipno', 'dptno'], ['vipno', 'pluno'], ['bndno', 'dptno']]
+    features_type_1_1 = []
+    for item in statistics:
+        items = tradeDf.groupby(item)
+        itemNos = list(items.indices.keys())
+        type_1_1 = {}
+        for index in range(1, len(itemNos)):
+            itemDf = items.get_group(itemNos[index])
+            buyCount = get_count_by_month(itemDf, months)
+            amtCount = get_amt_by_month(itemDf, months)
+            dayCount = get_day_by_month(itemDf, months)
+            feature = buyCount + amtCount + dayCount + [sum(buyCount), sum(amtCount), sum(dayCount)]
+            type_1_1[itemNos[index]] = feature
+        features_type_1_1.append(type_1_1)
+    return features_type_1_1
+
+
+def get_type_1_21_feature(months):
+    statistics = ['vipno']
+    columns = ['pluno', 'bndno', 'dptno']
+    features_type_1_21 = {}
+    for item in statistics:
+        items = tradeDf.groupby(item)
+        itemNos = list(items.indices.keys())
+        for index in range(0, len(itemNos)):
+            itemDf = items.get_group(itemNos[index])
+            i_count = get_column_by_month(itemDf, columns[0], months)
+            b_count = get_column_by_month(itemDf, columns[1], months)
+            c_count = get_column_by_month(itemDf, columns[2], months)
+            feature = i_count + b_count + c_count + [sum(i_count), sum(b_count), sum(c_count)]
+            key = itemNos[index]
+            features_type_1_21[key] = feature
+    return features_type_1_21
+
+
+def get_type_1_22_feature(months):
+    statistics = ['bndno', 'dptno']
+    columns = ['pluno']
+    features_type_1_22 = {}
+    for item in statistics:
+        items = tradeDf.groupby(item)
+        itemNos = list(items.indices.keys())
+        for index in range(0, len(itemNos)):
+            itemDf = items.get_group(itemNos[index])
+            i_count = get_column_by_month(itemDf, columns[0], months)
+            feature = i_count + [sum(i_count)]
+            key = itemNos[index]
+            features_type_1_22[key] = feature
+    return features_type_1_22
 
 
 if __name__ == "__main__":
@@ -67,48 +128,13 @@ if __name__ == "__main__":
     tradeDf['bndno'] = tradeDf['bndno'].fillna(-1).astype(int)
 
     # step 1
-    # statistics = ['vipno', 'bndno', 'dptno', 'pluno', ['vipno', 'bndno'],
-    #               ['vipno', 'dptno'], ['vipno', 'pluno'], ['bndno', 'dptno']]
-    statistics = [['vipno', 'pluno']]
-    for item in statistics:
-        items = tradeDf.groupby(item)
-        itemNos = list(items.indices.keys())
-        for index in range(1, len(itemNos)):
-            itemDf = items.get_group(itemNos[index])
-            buyCount = get_count_by_month(itemDf)
-            amtCount = get_amt_by_month(itemDf)
-            dayCount = get_day_by_month(itemDf)
-            print(buyCount)
-            print(amtCount)
-            print(dayCount)
-            print(sum(buyCount))
-            print(sum(amtCount))
-            print(sum(dayCount))
-            break
-
+    type_1_1_feature = get_type_1_1_feature(months)
     # step 2
-    statistics = ['vipno']
-    columns = ['pluno', 'bndno', 'dptno']
-    # for item in statistics:
-    #     items = tradeDf.groupby(item)
-    #     itemNos = list(items.indices.keys())
-    #     for index in range(0, len(itemNos)):
-    #         for col in columns:
-    #             alls = get_column_by_month(items.get_group(itemNos[index]), col)
-    #             print(alls)
-    #             print(sum(alls))
-    #         break
+    type_1_21_feature = get_type_1_21_feature(months)
 
-    statistics = ['bndno', 'dptno']
-    columns = ['pluno']
-    # for item in statistics:
-    #     items = tradeDf.groupby(item)
-    #     itemNos = list(items.indices.keys())
-    #     for index in range(1, len(itemNos)):
-    #         all = get_column_by_month(items.get_group(itemNos[index]), columns[0])
-    #         print(all)
-    #         print(sum(all))
-    #         break
+    type_1_22_feature = get_type_1_21_feature(months)
+
+
 
     # step 3
     statistics = ['bndno', 'dptno', 'pluno']

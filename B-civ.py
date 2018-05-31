@@ -97,7 +97,7 @@ def get_features(tradeDf, statistic, months):
     return infos, np.array(features)
 
 
-def train(tradeDf, statistic, months):
+def train_data(tradeDf, statistic, months):
     features = []
     labels = []
     infos = []
@@ -131,7 +131,7 @@ if __name__ == "__main__":
     #               ['vipno', 'dptno'], ['vipno', 'pluno'], ['bndno', 'dptno']]
     statistic = ['vipno']
     months = ['2016-2', '2016-3', '2016-4', '2016-5']
-    infos, features, labels = train(tradeDf, statistic, months)
+    infos, features, labels = train_data(tradeDf, statistic, months)
     gnb = GaussianNB()
     neigh = KNeighborsClassifier(n_neighbors=3)
     dtc = DecisionTreeClassifier(random_state=0)
