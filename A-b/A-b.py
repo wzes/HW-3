@@ -258,7 +258,7 @@ if __name__ == "__main__":
     average_errors = []
     revise_average_errors = []
     gnb = GaussianNB()
-    neigh = KNeighborsClassifier(n_neighbors=3)
+    neigh = KNeighborsClassifier(n_neighbors=4)
     dtc = DecisionTreeClassifier(random_state=0)
     abc = AdaBoostClassifier(n_estimators=50, learning_rate=1.0)
     rfc = RandomForestClassifier()
@@ -279,5 +279,5 @@ if __name__ == "__main__":
     x = range(0, 1220)
     labels = ['GaussianNB', 'KNeighborsClassifier', 'DecisionTreeClassifier', 'AdaBoostClassifier',
               'RandomForestClassifier', 'BaggingClassifier', 'GradientBoostingClassifier']
-    colors = ['r', 'g', 'r', 'c', 'm', 'y', 'k']
+    colors = ['r', 'g', 'b', 'c', 'm', 'y', 'k']
     make_picture(average_errors, revise_average_errors, labels, colors)

@@ -39,7 +39,7 @@ def get_gongcan_map(gongcanDf):
 
 def process_data(dataDf):
     labels = np.zeros((size, 3))
-    data = np.zeros((size, 23))
+    data = np.zeros((size, 9))
     # Statistic the each point
     for i in range(size):
         lon = dataDf.iloc[i]['Longitude']
@@ -73,44 +73,45 @@ def evaluate_classifier(y_pred, y_test, max_grids):
     d = 0
     t = 0
     for i in range(len(keys)):
-        dt = 0
-        d = 0
-        t = max_grids[keys[i]]
+        t = t + max_grids[keys[i]]
         for j in range(len(y_pred)):
             if int(keys[i]) == y_pred[j] == y_test[j, 0]:
                 dt += 1
             if int(keys[i]) == y_pred[j]:
                 d += 1
     if d == 0:
-        precision = -1
+        precision = 0
     else:
         precision = dt / d
     if t == 0:
-        recall = -1
+        recall = 0
     else:
         recall = dt / t
     if precision + recall == 0:
-        f_measurement = -1
+        f_measurement = 0
     else:
         f_measurement = 2 * precision * recall / (precision + recall)
-    return round(precision, 2), round(recall, 2), round(f_measurement, 2)
+    return [round(precision, 2), round(recall, 2), round(f_measurement, 2)]
 
 
 def init_grip_number(y_test):
     grid_number_map = {}
     # initialize the grid
     for i in range(int(get_grid_id(maxLongitude, maxLatitude))):
-        grid_number_map[str(i)] = 0
+        grid_number_map[i] = 0
 
     for i in range(len(y_test)):
-        grid_number_map[str(int(y_test[i][0]))] = grid_number_map[str(int(y_test[i][0]))] + 1
+        grid_number_map[int(y_test[i][0])] = grid_number_map[int(y_test[i][0])] + 1
     return grid_number_map
 
 
 def train(classifier):
     distances = []
     scores = []
-    for number in range(10):
+    loop_time = 10
+    if classifier.__class__.__name__[0:2] == 'Gr':
+        loop_time = 1
+    for number in range(loop_time):
         # split data
         X_train, X_test, y_train, y_test = train_test_split(data, labels, test_size=0.2, random_state=number)
         classifier.fit(X_train[:, 2:], y_train[:, 0])
@@ -118,10 +119,13 @@ def train(classifier):
         grid_number_map = init_grip_number(y_test)
         max_grids = get_max_grids(grid_number_map)
         y_pred = classifier.predict(X_test[:, 2:])
-
+        # print(max_grids)
         # for p in range(len(X_test)):
-
-
+        # error_count = 0
+        # train_grid_number_map = init_grip_number(y_train)
+        # for key in grid_number_map:
+        #     if grid_number_map[key] != 0 and train_grid_number_map[key] == 0:
+        #         error_count += 1
         # evaluate the model
         scores.append(evaluate_classifier(y_pred, y_test, max_grids))
         tmp = []
@@ -134,7 +138,7 @@ def train(classifier):
     matrix = np.array(distances)
     for index in range(matrix.shape[1]):
         errors.append(np.mean(matrix[:, index]))
-    return errors, scores
+    return errors, np.array(scores)
 
 
 def get_max_grids(grid_number_map):
@@ -149,11 +153,21 @@ def make_picture(errors, labels, colors):
     plt.figure(figsize=(15, 8))
     x = range(1220)
     for index in range(len(errors)):
-        plt.plot(x, errors[index], label=labels[index], linewidth=0.5, color=colors[index], marker='o',
+        plt.plot(x, errors[index], label=labels[index], linewidth=1, color=colors[index % len(colors)], marker='o',
                  markerfacecolor='blue', markersize=1)
     plt.xlabel('number')
     plt.ylabel('average error')
     plt.title('Average error probability distribution diagram')
+    plt.legend()
+    plt.show()
+
+
+def make_time_picture(times, labels, colors):
+    plt.figure(figsize=(15, 8))
+    plt.bar(x=range(1, 8), height=times, width=0.7, color="lightblue")
+    plt.xlabel('number')
+    plt.ylabel('cost(s)')
+    plt.title('Classifier performance bar diagram')
     plt.legend()
     plt.show()
 
@@ -186,24 +200,29 @@ if __name__ == "__main__":
 
     average_errors = []
     gnb = GaussianNB()
-    neigh = KNeighborsClassifier(n_neighbors=3)
+    neigh = KNeighborsClassifier(n_neighbors=4, weights='distance')
     dtc = DecisionTreeClassifier(random_state=0)
-    abc = AdaBoostClassifier(n_estimators=50, learning_rate=1.0)
+    abc = AdaBoostClassifier()
     rfc = RandomForestClassifier()
     bc = BaggingClassifier()
     gbc = GradientBoostingClassifier()
     # classifiers = [gnb, neigh, dtc, abc, rfc, bc, gbc]
-    classifiers = [neigh]
+    classifiers = [gnb, neigh, dtc, abc, rfc, bc, gbc]
+    times = []
     for classifier in classifiers:
         start = time.time()
         errors, scores = train(classifier)
         average_errors.append(errors)
         end = time.time()
-        print(scores)
-        print(end - start, 's')
-    # # draw errors
-    # x = range(0, 1220)
-    # labels = ['GaussianNB', 'KNeighborsClassifier', 'DecisionTreeClassifier', 'AdaBoostClassifier',
-    #           'RandomForestClassifier', 'BaggingClassifier', 'GradientBoostingClassifier']
-    # colors = ['r', 'g', 'r', 'c', 'm', 'y', 'k']
-    # make_picture(average_errors, labels, colors)
+        classifier_name = classifier.__class__.__name__
+        print(classifier_name,  'Average precision:', np.mean(scores[:, 0]) * 100, '%', 'Average recall:', np.mean(scores[:, 1]) * 100,
+              '%', 'Average f_measurement:', np.mean(scores[:, 2]) * 100, '%')
+        exec_time = round(end - start, 2)
+        times.append(exec_time)
+    # draw errors
+    x = range(0, 1220)
+    labels = ['GaussianNB', 'KNeighborsClassifier', 'DecisionTreeClassifier', 'AdaBoostClassifier',
+              'RandomForestClassifier', 'BaggingClassifier', 'GradientBoostingClassifier']
+    colors = ['r', 'g', 'b', 'c', 'm', 'y', 'k']
+    make_picture(average_errors, labels, colors)
+    make_time_picture(times, labels, colors)
