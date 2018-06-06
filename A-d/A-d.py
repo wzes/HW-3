@@ -77,6 +77,29 @@ def make_picture(errors, labels, color):
     plt.show()
 
 
+def make_time_picture(times):
+    plt.figure(figsize=(15, 8))
+    plt.bar(x=range(5, 15), height=times, width=0.7, color="lightblue")
+    plt.xlabel('number')
+    plt.ylabel('cost(s)')
+    plt.title('Time performance bar diagram')
+    plt.legend()
+    plt.show()
+
+
+def make_total_picture(errors):
+    plt.figure(figsize=(15, 8))
+    x = range(len(errors[0]))
+    for index in range(len(errors)):
+        plt.plot(x, errors[index], label='K=' + str(index + 5), linewidth=0.5, color='r', marker='o',
+                 markerfacecolor='blue', markersize=1)
+    plt.xlabel('number')
+    plt.ylabel('average error')
+    plt.title('Average error probability distribution diagram')
+    plt.legend()
+    plt.show()
+
+
 def train(classifier, data, label, top_data=None, top_data_label=None):
     distances = []
     for number in range(10):
@@ -104,11 +127,10 @@ def train(classifier, data, label, top_data=None, top_data_label=None):
     return errors
 
 
-def merge_data(group_medians, datas, data_labels):
+def merge_data(group_medians, datas, data_labels, k):
     sorted_group_median = sorted(group_medians.items(), key=lambda d: d[1])
     merged_datas = []
     merged_data_labels = []
-    k = int(len(datas) / 2)
     top_k_data = datas[sorted_group_median[0][0]]
     top_k_label = data_labels[sorted_group_median[0][0]]
     for index in range(k):
@@ -123,19 +145,19 @@ def merge_data(group_medians, datas, data_labels):
         # merge_data_label = np.vstack((data_labels[sorted_group_median[index][0]], top_k_label))
         merged_datas.append(datas[sorted_group_median[index][0]])
         merged_data_labels.append(data_labels[sorted_group_median[index][0]])
-    return merged_datas, merged_data_labels, top_k_data, top_k_label, k
+    return merged_datas, merged_data_labels, top_k_data, top_k_label
 
 
 if __name__ == "__main__":
     # read data
-    dataDf = pd.read_csv('data_2g.csv', header=0, dtype={'RNCID_1': np.object, 'CellID_1': np.object,
+    dataDf = pd.read_csv('../data_2g.csv', header=0, dtype={'RNCID_1': np.object, 'CellID_1': np.object,
                                                          'RNCID_2': np.object, 'CellID_2': np.object,
                                                          'RNCID_3': np.object, 'CellID_3': np.object,
                                                          'RNCID_4': np.object, 'CellID_4': np.object,
                                                          'RNCID_5': np.object, 'CellID_5': np.object,
                                                          'RNCID_6': np.object, 'CellID_6': np.object,
                                                          'RNCID_7': np.object, 'CellID_7': np.object})
-    gongcanDf = pd.read_csv('2g_gongcan.csv', header=0, dtype={'RNCID': np.object, 'CellID': np.object})
+    gongcanDf = pd.read_csv('../2g_gongcan.csv', header=0, dtype={'RNCID': np.object, 'CellID': np.object})
     # get gongcan data
     gongcanMap = get_gongcan_map(gongcanDf)
 
@@ -157,16 +179,28 @@ if __name__ == "__main__":
         average_errors.append(average_error)
 
     # top k data
-    merged_datas, merged_data_labels, top_k_data, top_k_label, k = merge_data(group_medians, datas, data_labels)
-
-    average_errors = []
-    for index in range(len(merged_datas)):
-        rfc = RandomForestClassifier(max_depth=2, random_state=0)
-        if index >= k:
-            average_error = train(rfc, merged_datas[index], merged_data_labels[index],
-                                  top_data=top_k_data, top_data_label=top_k_label)
-        else:
-            average_error = train(rfc, merged_datas[index], merged_data_labels[index])
-        average_errors.append(average_error)
-    color = 'r'
-    make_picture(average_errors, range(len(merged_datas)), color)
+    total_errors = []
+    exec_times = []
+    for k in range(5, 15):
+        merged_datas, merged_data_labels, top_k_data, top_k_label = merge_data(group_medians, datas, data_labels, k)
+        total_error = []
+        average_errors = []
+        start = time.time()
+        for index in range(len(merged_datas)):
+            rfc = RandomForestClassifier()
+            if index >= k:
+                average_error = train(rfc, merged_datas[index], merged_data_labels[index],
+                                      top_data=top_k_data, top_data_label=top_k_label)
+            else:
+                average_error = train(rfc, merged_datas[index], merged_data_labels[index])
+            average_errors.append(average_error)
+            total_error += average_error
+        color = 'r'
+        end = time.time()
+        exec_time = round(end - start, 2)
+        exec_times.append(exec_time)
+        # make_picture(average_errors, range(len(merged_datas)), color)
+        print('K:', k, 'Total error:', sum(total_error))
+        total_errors.append(sorted(total_error))
+    # make_total_picture(total_errors)
+    make_time_picture(exec_times)

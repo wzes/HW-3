@@ -1,14 +1,6 @@
 import pandas as pd
 import numpy as np
-import time
-from sklearn.naive_bayes import GaussianNB
-from sklearn.neighbors import KNeighborsClassifier
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.tree import DecisionTreeClassifier
-from sklearn.ensemble import AdaBoostClassifier
-from sklearn.ensemble import BaggingClassifier
-from sklearn.ensemble import GradientBoostingClassifier
-import matplotlib.pyplot as plt
+from scipy.optimize import leastsq
 
 
 def get_normalize_mean(arr):
@@ -481,131 +473,64 @@ def get_type_4_31_feature(months):
     return features_type_4_31
 
 
-def get_train_data(data_last_month_ui):
-    features = []
-    labels = []
-    infos = []
-    # get group by ui data
-    type_1_1 = type_1_1_feature
-    vip = type_1_21_feature
-    type_2_11 = type_2_11_feature
-    type_2_3 = type_2_3_feature
-    type_4_221 = type_4_221_feature
-    for key in uiKeys:
-        try:
-            ui_feature = type_1_1[key] + type_2_11[key]
-        except KeyError:
-            ui_feature = [0] * 12 + [0] * 21
-        try:
-            u_feature = type_1_1[key[0]] + type_2_11[key[0]] + type_2_3[key[0]] + type_4_221[key[0]]
-        except KeyError:
-            u_feature = [0] * 12 + [0] * 21 + [0] * 36 + [0] * 3
-        try:
-            i_feature = type_1_1[key[1]] + type_2_11[key[1]]
-        except KeyError:
-            i_feature = [0] * 12 + [0] * 21
-        feature = ui_feature + u_feature + i_feature + vip[key[0]]
-        features.append(feature)
-        infos.append(key)
-        try:
-            labels.append(data_last_month_ui[key])
-        except KeyError:
-            labels.append(False)
-    return infos, np.array(features), np.array(labels)
-
-
-def get_test_data(data_last_month_ui):
-    features = []
-    labels = []
-    infos = []
-    # get group by ui data
-    type_1_1 = test_type_1_1_feature
-    type_2_11 = test_type_2_11_feature
-    type_1_21 = test_type_1_21_feature
-    type_2_3 = test_type_2_3_feature
-    type_4_221 = test_type_4_221_feature
-    for key in uiKeys:
-        try:
-            ui_feature = type_1_1[key] + type_2_11[key]
-        except KeyError:
-            ui_feature = [0] * 12 + [0] * 21
-        try:
-            u_feature = type_1_1[key[0]] + type_2_11[key[0]] + type_2_3[key[0]] + type_4_221[key[0]]
-        except KeyError:
-            u_feature = [0] * 12 + [0] * 21 + [0] * 36 + [0] * 3
-        try:
-            i_feature = type_1_1[key[1]] + type_2_11[key[1]]
-        except KeyError:
-            i_feature = [0] * 12 + [0] * 21
-        feature = ui_feature + u_feature + i_feature + type_1_21[key[0]]
-        features.append(feature)
-        infos.append(key)
-        try:
-            labels.append(data_last_month_ui[key])
-        except KeyError:
-            labels.append(False)
-    return infos, np.array(features), np.array(labels)
-
-
-def write_predict(features, infos, y_pred, my_number, work_number, classifier_name):
-    for index in range(len(features)):
-        with open('output/' + my_number + '_' + work_number + '_' + classifier_name + '.txt', 'a+') as f:
-            content = ''
-            for nos in infos[index]:
-                content = content + str(nos) + ','
-            content = content + str(y_pred[index]) + '\n'
-            f.write(content)
-
-
 if __name__ == "__main__":
-    my_number = '1552730'
-    work_number = '2b'
     tradeDf = pd.read_csv('trade_new_part.csv', header=0)
+    months = ['2016-2', '2016-3', '2016-4', '2016-5']
     # data pre process
     tradeDf['sldat'] = pd.to_datetime(tradeDf['sldat'])
     tradeDf['bndno'] = tradeDf['bndno'].fillna(-1).astype(int)
 
-    uiDf = tradeDf.groupby(['vipno', 'pluno'])
-    itemNos = list(uiDf.indices.keys())
-    uiKeys = []
-    for index in range(0, len(itemNos)):
-        uiKeys.append(itemNos[index])
     # step 1
-    months = ['2016-2', '2016-3', '2016-4', '2016-5']
-    last_month_ui = get_last_month_record(['vipno', 'pluno'], months)
     type_1_1_feature = get_type_1_1_feature(months)
+    print(type_1_1_feature)
+    # step 2
     type_1_21_feature = get_type_1_21_feature(months)
+    print(type_1_21_feature)
+    #
+    type_1_22_feature = get_type_1_22_feature(months)
+    print(type_1_22_feature)
+    # step 3
+    type_1_3_feature = get_type_1_3_feature(months)
+    print(type_1_3_feature)
+
+    # step 4
     type_2_11_feature = get_type_2_11_feature(months)
+    print(type_2_11_feature)
+    type_2_12_feature = get_type_2_12_feature(months)
+    print(type_2_12_feature)
+    type_2_13_feature = get_type_2_13_feature(months)
+    print(type_2_13_feature)
+
+    # step 5
+    type_2_2_feature = get_type_2_2_feature(months)
+    print(type_2_2_feature)
+
     type_2_3_feature = get_type_2_3_feature(months)
+    print(type_2_3_feature)
+
+    last_week = ['2016-4-24', '2016-4-25', '2016-4-26', '2016-4-27', '2016-4-28', '2016-4-29', '2016-4-30', '2016-5']
+    last_month = ['2016-4', '2016-5']
+    type_3_111_feature = get_type_3_11_feature(last_week)
+    type_3_112_feature = get_type_3_11_feature(last_month)
+    print(type_3_111_feature)
+    print(type_3_112_feature)
+    type_4_11_feature = get_type_4_11_feature(months)
+    print(type_4_11_feature)
+
+    type_4_121_feature = get_type_4_121_feature(months)
+    print(type_4_121_feature)
+
+    type_4_122_feature = get_type_4_122_feature(months)
+    print(type_4_122_feature)
+
+    type_4_13_feature = get_type_4_13_feature(months)
+    print(type_4_13_feature)
     type_4_221_feature = get_type_4_221_feature(months)
-    info, features, labels = get_train_data(last_month_ui)
-    #
-    test_months = ['2016-4', '2016-5', '2016-6', '2016-7']
-    test_last_month_ui = get_last_month_record(['vipno', 'pluno'], test_months)
-    test_type_1_1_feature = get_type_1_1_feature(test_months)
-    test_type_1_21_feature = get_type_1_21_feature(test_months)
-    test_type_2_11_feature = get_type_2_11_feature(test_months)
-    test_type_2_3_feature = get_type_2_3_feature(test_months)
-    test_type_4_221_feature = get_type_4_221_feature(test_months)
-    test_info, test_features, test_labels = get_test_data(test_last_month_ui)
+    print(type_4_221_feature)
+    type_4_222_feature = get_type_4_222_feature(months)
+    print(type_4_222_feature)
+    type_4_23_feature = get_type_4_23_feature(months)
+    print(type_4_23_feature)
 
-    #
-    gnb = GaussianNB()
-    neigh = KNeighborsClassifier(n_neighbors=3)
-    dtc = DecisionTreeClassifier(random_state=0)
-    abc = AdaBoostClassifier(n_estimators=50, learning_rate=1.0)
-    rfc = RandomForestClassifier()
-    bc = BaggingClassifier()
-    gbc = GradientBoostingClassifier()
-    classifiers = [gnb, neigh, dtc, abc, rfc, bc]
-
-    # classifiers = [gnb, neigh, dtc, abc, rfc, bc, gbc]
-    for classifier in classifiers:
-        start = time.time()
-        classifier_name = classifier.__class__.__name__
-        classifier.fit(features, labels)
-        y_pred = classifier.predict(test_features)
-        end = time.time()
-        print(end - start, 's', classifier_name + ' precision: ', round((y_pred == test_labels).sum() / len(y_pred), 2))
-        # write
-        # write_predict(test_features, test_info, y_pred, my_number, work_number, classifier_name)
+    type_4_31_feature = get_type_4_31_feature(months)
+    print(type_4_31_feature)

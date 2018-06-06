@@ -64,6 +64,18 @@ def process_data(dataDf):
     return datas, data_labels
 
 
+def make_total_picture(errors):
+    plt.figure(figsize=(15, 8))
+    x = range(len(errors))
+    plt.plot(x, errors, label='RandomForestClassifier Error', linewidth=0.5, color='r', marker='o',
+             markerfacecolor='blue', markersize=1)
+    plt.xlabel('number')
+    plt.ylabel('average error')
+    plt.title('Average error probability distribution diagram')
+    plt.legend()
+    plt.show()
+
+
 def make_picture(errors, labels, color):
     plt.figure(figsize=(15, 8))
     for index in range(len(errors)):
@@ -103,14 +115,14 @@ def train(classifier, data, label):
 
 if __name__ == "__main__":
     # read data
-    dataDf = pd.read_csv('data_2g.csv', header=0, dtype={'RNCID_1': np.object, 'CellID_1': np.object,
+    dataDf = pd.read_csv('../data_2g.csv', header=0, dtype={'RNCID_1': np.object, 'CellID_1': np.object,
                                                          'RNCID_2': np.object, 'CellID_2': np.object,
                                                          'RNCID_3': np.object, 'CellID_3': np.object,
                                                          'RNCID_4': np.object, 'CellID_4': np.object,
                                                          'RNCID_5': np.object, 'CellID_5': np.object,
                                                          'RNCID_6': np.object, 'CellID_6': np.object,
                                                          'RNCID_7': np.object, 'CellID_7': np.object})
-    gongcanDf = pd.read_csv('2g_gongcan.csv', header=0, dtype={'RNCID': np.object, 'CellID': np.object})
+    gongcanDf = pd.read_csv('../2g_gongcan.csv', header=0, dtype={'RNCID': np.object, 'CellID': np.object})
     # get gongcan data
     gongcanMap = get_gongcan_map(gongcanDf)
 
@@ -123,10 +135,18 @@ if __name__ == "__main__":
 
     datas, data_labels = process_data(dataDf)
     average_errors = []
+    total_errors = []
+    start = time.time()
     for index in range(len(datas)):
         rfc = RandomForestClassifier()
         average_error = train(rfc, datas[index], data_labels[index])
-        print(average_error)
         average_errors.append(average_error)
+        total_errors += average_error
+    end = time.time()
+    exec_time = round(end - start, 2)
+    print(exec_time)
     colors = 'r'
     make_picture(average_errors, range(len(datas)), colors)
+    print('Total error:', sum(total_errors))
+    total_errors = sorted(total_errors)
+    make_total_picture(total_errors)

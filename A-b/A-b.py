@@ -73,27 +73,25 @@ def evaluate_classifier(y_pred, y_test, max_grids):
     d = 0
     t = 0
     for i in range(len(keys)):
-        dt = 0
-        d = 0
-        t = max_grids[keys[i]]
+        t = t + max_grids[keys[i]]
         for j in range(len(y_pred)):
             if int(keys[i]) == y_pred[j] == y_test[j, 0]:
                 dt += 1
             if int(keys[i]) == y_pred[j]:
                 d += 1
     if d == 0:
-        precision = -1
+        precision = 0
     else:
         precision = dt / d
     if t == 0:
-        recall = -1
+        recall = 0
     else:
         recall = dt / t
     if precision + recall == 0:
-        f_measurement = -1
+        f_measurement = 0
     else:
         f_measurement = 2 * precision * recall / (precision + recall)
-    return round(precision, 2), round(recall, 2), round(f_measurement, 2)
+    return [round(precision, 2), round(recall, 2), round(f_measurement, 2)]
 
 
 def init_grip_number(y_test):
@@ -166,7 +164,10 @@ def train(classifier):
     revise_distances = []
     scores = []
     revise_scores = []
-    for number in range(10):
+    loop_time = 10
+    if classifier.__class__.__name__[0:2] == 'Gr':
+        loop_time = 1
+    for number in range(loop_time):
         # split data
         X_train, X_test, y_train, y_test = train_test_split(data, labels, test_size=0.2, random_state=number)
         classifier.fit(X_train[:, 2:], y_train[:, 0])
@@ -204,7 +205,7 @@ def train(classifier):
     matrix = np.array(revise_distances)
     for index in range(matrix.shape[1]):
         revise_errors.append(np.mean(matrix[:, index]))
-    return errors, scores, revise_errors, revise_scores
+    return errors, np.array(scores), revise_errors, np.array(revise_scores)
 
 
 def get_max_grids(grid_number_map):
@@ -230,16 +231,26 @@ def make_picture(errors, revise_errors, labels, colors):
     plt.show()
 
 
+def make_time_picture(times, labels, colors):
+    plt.figure(figsize=(15, 8))
+    plt.bar(x=range(1, 8), height=times, width=0.7, color="lightblue")
+    plt.xlabel('number')
+    plt.ylabel('cost(s)')
+    plt.title('Classifier performance bar diagram')
+    plt.legend()
+    plt.show()
+
+
 if __name__ == "__main__":
     # read data
-    dataDf = pd.read_csv('data_2g.csv', header=0, dtype={'RNCID_1': np.object, 'CellID_1': np.object,
+    dataDf = pd.read_csv('../data_2g.csv', header=0, dtype={'RNCID_1': np.object, 'CellID_1': np.object,
                                                          'RNCID_2': np.object, 'CellID_2': np.object,
                                                          'RNCID_3': np.object, 'CellID_3': np.object,
                                                          'RNCID_4': np.object, 'CellID_4': np.object,
                                                          'RNCID_5': np.object, 'CellID_5': np.object,
                                                          'RNCID_6': np.object, 'CellID_6': np.object,
                                                          'RNCID_7': np.object, 'CellID_7': np.object})
-    gongcanDf = pd.read_csv('2g_gongcan.csv', header=0, dtype={'RNCID': np.object, 'CellID': np.object})
+    gongcanDf = pd.read_csv('../2g_gongcan.csv', header=0, dtype={'RNCID': np.object, 'CellID': np.object})
     # get gongcan data
     gongcanMap = get_gongcan_map(gongcanDf)
 
@@ -258,26 +269,35 @@ if __name__ == "__main__":
     average_errors = []
     revise_average_errors = []
     gnb = GaussianNB()
-    neigh = KNeighborsClassifier(n_neighbors=4)
+    neigh = KNeighborsClassifier(n_neighbors=4, weights='distance')
     dtc = DecisionTreeClassifier(random_state=0)
     abc = AdaBoostClassifier(n_estimators=50, learning_rate=1.0)
     rfc = RandomForestClassifier()
     bc = BaggingClassifier()
     gbc = GradientBoostingClassifier()
-    # classifiers = [gnb, neigh, dtc, abc, rfc, bc, gbc]
-    classifiers = [gnb]
+    classifiers = [gnb, neigh, dtc, abc, rfc, bc, gbc]
+    # classifiers = [gnb]
+    times = []
     for classifier in classifiers:
         start = time.time()
         errors, scores, revise_errors, revise_scores = train(classifier)
         average_errors.append(errors)
         revise_average_errors.append(revise_errors)
         end = time.time()
-        print(scores)
-        print(revise_scores)
-        print(end - start, 's')
+        classifier_name = classifier.__class__.__name__
+        print("before: ")
+        print(classifier_name, 'Average precision:', np.mean(scores[:, 0]), '%', 'Average recall:',
+              np.mean(scores[:, 1]),
+              '%', 'Average f_measurement:', np.mean(scores[:, 2]), '%')
+        print("revise: ")
+        print(classifier_name, 'Average precision:', np.mean(revise_scores[:, 0]), '%', 'Average recall:',
+              np.mean(revise_scores[:, 1]),
+              '%', 'Average f_measurement:', np.mean(revise_scores[:, 2]), '%')
+        exec_time = round(end - start, 2)
+        times.append(exec_time)
     # # draw errors
-    x = range(0, 1220)
     labels = ['GaussianNB', 'KNeighborsClassifier', 'DecisionTreeClassifier', 'AdaBoostClassifier',
               'RandomForestClassifier', 'BaggingClassifier', 'GradientBoostingClassifier']
     colors = ['r', 'g', 'b', 'c', 'm', 'y', 'k']
     make_picture(average_errors, revise_average_errors, labels, colors)
+    make_time_picture(times, labels, colors)

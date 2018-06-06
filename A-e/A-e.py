@@ -141,16 +141,28 @@ def top_similarity_data(tops, datas, data_labels):
     return similar_data, similar_label
 
 
+def make_total_picture(errors):
+    plt.figure(figsize=(15, 8))
+    x = range(len(errors))
+    plt.plot(x, errors, label='RandomForestClassifier Error', linewidth=0.5, color='r', marker='o',
+             markerfacecolor='blue', markersize=1)
+    plt.xlabel('number')
+    plt.ylabel('average error')
+    plt.title('Average error probability distribution diagram')
+    plt.legend()
+    plt.show()
+
+
 if __name__ == "__main__":
     # read data
-    dataDf = pd.read_csv('data_2g.csv', header=0, dtype={'RNCID_1': np.object, 'CellID_1': np.object,
+    dataDf = pd.read_csv('../data_2g.csv', header=0, dtype={'RNCID_1': np.object, 'CellID_1': np.object,
                                                          'RNCID_2': np.object, 'CellID_2': np.object,
                                                          'RNCID_3': np.object, 'CellID_3': np.object,
                                                          'RNCID_4': np.object, 'CellID_4': np.object,
                                                          'RNCID_5': np.object, 'CellID_5': np.object,
                                                          'RNCID_6': np.object, 'CellID_6': np.object,
                                                          'RNCID_7': np.object, 'CellID_7': np.object})
-    gongcanDf = pd.read_csv('2g_gongcan.csv', header=0, dtype={'RNCID': np.object, 'CellID': np.object})
+    gongcanDf = pd.read_csv('../2g_gongcan.csv', header=0, dtype={'RNCID': np.object, 'CellID': np.object})
     # get gongcan data
     gongcanMap = get_gongcan_map(gongcanDf)
 
@@ -175,13 +187,21 @@ if __name__ == "__main__":
     top_similarity_data, top_similarity_label = top_similarity_data(tops, datas, data_labels)
 
     average_errors = []
+    total_error = []
+    start = time.time()
     for index in range(len(datas)):
-        rfc = RandomForestClassifier(max_depth=2, random_state=0)
+        rfc = RandomForestClassifier()
         if index in tops:
             average_error = train(rfc, datas[index], data_labels[index],
                                   top_data=top_similarity_data, top_data_label=top_similarity_label)
         else:
             average_error = train(rfc, datas[index], data_labels[index])
         average_errors.append(average_error)
+        total_error += average_error
     color = 'r'
+    end = time.time()
+    exec_time = round(end - start, 2)
     make_picture(average_errors, range(len(datas)), color)
+    total_error = sorted(total_error)
+    print('Exec Time', exec_time, 's', 'Total error:', sum(total_error))
+    make_total_picture(total_error)
